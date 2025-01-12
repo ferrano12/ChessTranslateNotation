@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <style>
+            .chessbody {
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              height: 100vh;
+              margin: 0;
+              background-color: #f0f0f0;
+            }
+            #chessboard {
+              display: grid;
+              grid-template-columns: repeat(8, 60px);
+              grid-template-rows: repeat(8, 60px);
+              border: 2px solid #333;
+            }
+            .square {
+              width: 60px;
+              height: 60px;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              font-size: 24px;
+              cursor: pointer;
+              font-family: Arial, sans-serif;
+            }
+            .square.black {
+              background-color: #769656 !important;
+            }
+            .square.white {
+              background-color: #eeeed2;
+            }
+            .piece {
+              cursor: default;
+              cursor: pointer;
+            }
+          </style>
+       
+           <!-- Compiled and minified CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+
+    <!-- Compiled and minified JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    </head>
+<body>
+<div class="row">  
+    <div class="col s12">
+        <h1>Traductor Chess</h1>
+        <p>Este proyecto nace en el momento en que desempolvé un antiguo libro de ajedrez y me encontré con el problema de que la notación utilizada para mostrar las jugadas era la descriptiva, una notación en desuso y confusa. Este proyecto sirve para traducir esa notación a posiciones algebraicas y, así, facilitar el estudio de estos libros.</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col s12">
+        Selecciona un color: 
+    </div>
+    <div class="col s12">
+        <form action="#">
+            <p>
+              <label>
+                <input name="color" type="radio" value="1" />
+                <span>Black</span>
+              </label>
+            </p>
+            <p>
+              <label>
+                <input name="color" type="radio" value="0"  />
+                <span>White</span>
+              </label>
+            </p>
+        </form>
+    </div>
+    <div class="col s12">
+        <input id="description" type="text"/>
+        <div class="btn Green" onclick="sendInstruction()">Traducir</div>
+    </div>
+</div>
+<div class="row">
+    <div class="col s12">
+        <p>Este seria el movimiento en notación Algebraica: <b><span id="result"></span></b></p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col s12">
+        <p>Hacer movimiento:</p>
+    </div>
+    <div class="col s12">
+        <span>des de: </span><input id="fromPiece"/>
+    </div>
+    <div class="col s12">
+        <span>Hacia: </span><input id="toPiece"/>
+    </div>
+    <div class="col s12">
+        <span class="btn green" onclick="makeMove()">Mover</span>
+    </div>
+</div>
+<div class="row">
+    <div class="cols 12"><h4>Selecciona una pieza para elegir el movimiento </span><span id="movementList"></span></div>
+    <div class="cols 12"><span>Listado de movimientos: </span><span id="movementList"></span></div>    
+    <div class="col s12 chessbody">
+        <div id="chessboard"></div>
+    </div>
+</div>
+</body>
+<script>
+// Mapeo de piezas y posiciones para traducir descriptiva a algebraica
+const descriptiveToAlgebraic = {
+  "rey": "K",
+  "dama": "Q",
+  "torre": "R",
+  "alfil": "B",
+  "caballo": "N",
+  "peón": "",
+  "r":"k",
+  "d":"q",
+  "t":"r",
+  "a":"b",
+  "c":"n"
+};
+
+const ranks = {  
+  "1":8,
+  "2":7,
+  "3":6,
+  "4":5,
+  "5":4,
+  "6":3,
+  "7":2,
+  "8":1
+};
+
+const files = {
+  "rey": "e",
+  "dama": "d",
+  "alfil del rey": "f",
+  "caballo del rey": "g",
+  "torre del rey": "h",
+  "alfil de la dama": "c",
+  "caballo de la dama": "b",
+  "torre de la dama": "a",
+  "r":"e",
+  "d":"d",
+  "ar":"f",
+  "cr":"g",
+  "tr":"h",
+  "ad":"c",
+  "cd":"b",
+  "td":"a"
+};
+
+function updateMovementList(){
+    let m = "";
+    positions.forEach(function(movement) {
+        m += movement + ", "
+    });
+    m = m.slice(0,-2);
+    document.getElementById("movementList").innerText = m
+}
+
+function translateDescriptiveToAlgebraic(instruction) {
+  // Convertir a minúsculas para simplificar el análisis
+  instruction = instruction.toLowerCase();
+
+  // Detectar la pieza
+  piece = descriptiveToAlgebraic[instruction[0]] || "";
+
+
+
+  let column = ""
+  if (instruction.length>2){
+    column = instruction[2];
+  }
+  if (instruction.length>3){
+    column = instruction[2] + instruction[3];
+  }
+  file = files[column] || "";
+  
+
+
+  if (getSelectedRadioValue()==1){
+    rank = ranks[instruction[1]] || "";
+  }else{
+    rank = instruction[1];
+  }
+
+  if (file && rank) {
+    return piece + file + rank;
+  } else {
+    return "Instrucción no válida.";
+  }
+}
+var positions = [];
+
+function getSelectedRadioValue() {
+    let radios = document.getElementsByName('color');
+    for (let i = 0; i < radios.length; i++) {
+      if (radios[i].checked) {
+        return radios[i].value;        
+      }
+    }    
+  }
+function sendInstruction(){
+    let translateElement = document.getElementById('description').value
+    let result = translateDescriptiveToAlgebraic(translateElement);
+    if (result){
+        document.getElementById('result').innerText = result;  
+        document.getElementById('toPiece').value = result;        
+    }
+    
+}
+
+
+    const positionsInitial = [
+      "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1",  // Torres, Caballos, Alfiles, Dama, Rey (Blanco)
+      "a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2",  // Peones (Blancos)
+
+      "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8",  // Torres, Caballos, Alfiles, Dama, Rey (Negro)
+      "a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7",  // Peones (Negros)
+    ];
+    var initialPiecePositions = {
+        "a1": "♖", "b1": "♘", "c1": "♗", "d1": "♕", "e1": "♔", "f1": "♗", "g1": "♘", "h1": "♖",
+        "a2": "♙", "b2": "♙", "c2": "♙", "d2": "♙", "e2": "♙", "f2": "♙", "g2": "♙", "h2": "♙",
+        "a8": "♜", "b8": "♞", "c8": "♝", "d8": "♛", "e8": "♚", "f8": "♝", "g8": "♞", "h8": "♜",
+        "a7": "♟︎", "b7": "♟︎", "c7": "♟︎", "d7": "♟︎", "e7": "♟︎", "f7": "♟︎", "g7": "♟︎", "h7": "♟︎",
+      };
+
+    // Crear una copia para las posiciones actuales de las piezas
+    let positionsCurrent = [...positionsInitial];
+
+        // Función para colocar piezas en el tablero
+        function placePieces2(positions) {
+      positions.forEach(position => {
+        const square = document.querySelector(`[data-position='${position}']`);        
+        if (square) {
+          const piece = getPiece2(position); // Obtener el símbolo de la pieza
+          square.innerHTML = `<span   class="piece">${piece}</span>`;
+        }
+      });
+    }
+ 
+     // Función para devolver el símbolo de la pieza según la posición
+     function getPiece2(position) {    
+      return initialPiecePositions[position] || "";
+    }
+    function drawChessboard2() {
+      const board = document.getElementById("chessboard");
+      const files = "abcdefgh";
+      board.innerHTML = ''; // Limpiar el tablero cada vez que lo dibujes
+      for (let rank = 8; rank >= 1; rank--) {
+        for (let file = 0; file < 8; file++) {
+          const square = document.createElement("div");
+          const isBlack = (rank + file) % 2 === 1;
+          square.className = `square ${isBlack ? "black" : "white"}`;
+          square.dataset.position = `${files[file]}${rank}`;        
+          square.setAttribute("onclick","loadMove(this)")           
+          board.appendChild(square);
+        }
+      }
+    }
+    function makeMove(){
+        let from = document.getElementById("fromPiece").value;
+        let to = document.getElementById("toPiece").value;
+        movePiece(from,to)
+    }
+    function loadMove(t){
+        document.getElementById("fromPiece").value = t.getAttribute("data-position");
+    }
+    // Función para mover una pieza
+    function movePiece(fromPosition, toPosition) {
+        if (initialPiecePositions[fromPosition]) {
+            // Eliminar la pieza de la posición inicial
+      positionsCurrent = positionsCurrent.filter(pos => pos !== fromPosition);
+      // Añadir la pieza a la nueva posición
+      positionsCurrent.push(toPosition);
+      // Redibujar el tablero con las nuevas posiciones
+      drawChessboard2();
+      
+        initialPiecePositions[toPosition] = initialPiecePositions[fromPosition];  // Mover la pieza de "e2" a "e4"
+        delete initialPiecePositions[fromPosition];  // Eliminar la pieza de "e2"
+      }
+      placePieces2(positionsCurrent);
+      positions.push(toPosition);
+      updateMovementList();
+    }
+
+    // Generar el tablero y colocar las piezas
+    drawChessboard2();
+    placePieces2(positionsCurrent);
+     // Ejemplo: Mover el peón de "e2" a "e4"
+    
+
+
+</script>
+
+</html>
+
