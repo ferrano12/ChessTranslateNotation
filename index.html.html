@@ -5,8 +5,7 @@
             .chessbody {
               display: flex;
               justify-content: center;
-              align-items: center;
-              height: 100vh;
+              align-items: center;              
               margin: 0;
               background-color: #f0f0f0;
             }
@@ -53,6 +52,7 @@
 </div>
 
 <div class="row">
+  <div class="col s4">
     <div class="col s12">
         Selecciona un color: 
     </div>
@@ -76,27 +76,26 @@
         <input id="description" type="text"/>
         <div class="btn Green" onclick="sendInstruction()">Traducir</div>
     </div>
+  </div>
+  <div class="col s2">
+    <p>Este seria el movimiento en notación Algebraica: <b><h4 id="result"></span></b></p>
 </div>
-<div class="row">
+  <div class="col s6">
     <div class="col s12">
-        <p>Este seria el movimiento en notación Algebraica: <b><span id="result"></span></b></p>
+          <p>Hacer movimiento:</p>
+      </div>
+      <div class="col s12">
+          <span>des de: </span><input id="fromPiece"/>
+      </div>
+      <div class="col s12">
+          <span>Hacia: </span><input id="toPiece"/>
+      </div>
+      <div class="col s12">
+          <span class="btn green" onclick="makeMove()">Mover</span>
+      </div>
     </div>
 </div>
 
-<div class="row">
-    <div class="col s12">
-        <p>Hacer movimiento:</p>
-    </div>
-    <div class="col s12">
-        <span>des de: </span><input id="fromPiece"/>
-    </div>
-    <div class="col s12">
-        <span>Hacia: </span><input id="toPiece"/>
-    </div>
-    <div class="col s12">
-        <span class="btn green" onclick="makeMove()">Mover</span>
-    </div>
-</div>
 <div class="row">
     <div class="cols 12"><h4>Selecciona una pieza para elegir el movimiento </span><span id="movementList"></span></div>
     <div class="cols 12"><span>Listado de movimientos: </span><span id="movementList"></span></div>    
@@ -107,6 +106,9 @@
 </body>
 <script>
 // Mapeo de piezas y posiciones para traducir descriptiva a algebraica
+
+let draggedPiece = null;
+let fromPosition = "";
 const descriptiveToAlgebraic = {
   "rey": "K",
   "dama": "Q",
@@ -232,15 +234,25 @@ function sendInstruction(){
 
         // Función para colocar piezas en el tablero
         function placePieces2(positions) {
-      positions.forEach(position => {
+        positions.forEach(position => {
         const square = document.querySelector(`[data-position='${position}']`);        
         if (square) {
           const piece = getPiece2(position); // Obtener el símbolo de la pieza
-          square.innerHTML = `<span   class="piece">${piece}</span>`;
+          square.innerHTML = `<span style='cursor:grab;' draggable='true' ondragstart="onSelect('${position}')"   class="piece">${piece}</span>`;
         }
       });
     }
  
+    function onSelect(p){
+      fromPosition = p;
+    }
+    function handleMove(toPosition){      
+      movePiece(fromPosition,toPosition);
+    }
+    function allowDrop(event) {
+  event.preventDefault(); // Permite que el elemento acepte el "drop"
+}
+
      // Función para devolver el símbolo de la pieza según la posición
      function getPiece2(position) {    
       return initialPiecePositions[position] || "";
@@ -255,14 +267,17 @@ function sendInstruction(){
           const isBlack = (rank + file) % 2 === 1;
           square.className = `square ${isBlack ? "black" : "white"}`;
           square.dataset.position = `${files[file]}${rank}`;        
-          square.setAttribute("onclick","loadMove(this)")           
+          square.setAttribute("onclick","loadMove(this)")   
+          let position = `${files[file]}${rank}` 
+          square.setAttribute("ondrop","handleMove('"+ position +"')")    
+          square.setAttribute("ondragover","allowDrop(event)")       
           board.appendChild(square);
         }
       }
     }
     function makeMove(){
-        let from = document.getElementById("fromPiece").value;
-        let to = document.getElementById("toPiece").value;
+        let from = document.getElementById("fromPiece").value.toLowerCase();
+        let to = document.getElementById("toPiece").value.toLowerCase();
         movePiece(from,to)
     }
     function loadMove(t){
